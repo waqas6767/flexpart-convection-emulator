@@ -67,8 +67,9 @@ Emanuel–Živković-Rothman scheme accurately enough to be coupled into FLEXPAR
 | Speed | ≥ 10× | 1.4× | — |
 
 ### Remaining Phase 1 items
-- Lower the gate threshold (e.g. 0.5 → 0.3): the gate misses some weak convection, which causes most
-  of the large per-column errors in the Atlantic test.
+- Gate threshold tested (0.5 → 0.2, no retraining): 91–98 % of missed columns are weak convection; 0.2 recovers
+  ~40 % of misses, and transport checks change by < 0.3 points. Recommended threshold 0.3. Remaining misses need a
+  better-trained gate (more weight on weak convection).
 - Add real surface pressure (1013 hPa is assumed) and test model-level input before coupling.
 
 ### Risks that materialised, and what was done

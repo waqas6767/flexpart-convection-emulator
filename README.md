@@ -24,6 +24,24 @@ value of this approach lies in accuracy and in learning better physics later (Ph
 
 ![Strongest test column, v5](figures/v5_era5_strongest_column.png)
 
+## Gate threshold test
+
+The saved v5 model was re-evaluated with gate thresholds from 0.5 to 0.2, without retraining
+(`scripts/gate_threshold_test.py`; results in `results/v5_gate_threshold_test.json`).
+
+| Threshold | Missed (Indian / Atlantic) | False alarms (Indian / Atlantic) | Gate F1 (Indian / Atlantic) | Mass-flux error (Indian / Atlantic) |
+|---|---|---|---|---|
+| 0.5 | 510 / 643 | 53 / 503 | 0.989 / 0.976 | 11.2 % / 7.9 % |
+| 0.3 | 379 / 489 | 87 / 565 | 0.991 / 0.978 | 11.1 % / 8.1 % |
+| 0.2 | 311 / 401 | 112 / 616 | 0.992 / 0.979 | 11.1 % / 8.2 % |
+
+- 91–98 % of the missed columns are weak convection (lowest quarter of the new cloud-base mass flux).
+- Lowering the threshold to 0.2 recovers about 40 % of the misses, at roughly one extra false alarm each.
+- Transport checks (mass flux, per-column error, cloud-base mass flux) change by less than 0.3 percentage points:
+  weak convection moves little air, so the remaining gate errors matter little for transport.
+- Recommended threshold: **0.3**. The misses that remain need a better-trained gate (e.g. more weight on weak
+  convection), not a lower threshold.
+
 ## How it works
 
 1. **Teacher:** `CONVECT` and `TLIFT` are copied out of FLEXPART 11's `conv_mod.f90`, the `ERROR STOP` is

@@ -1,0 +1,101 @@
+{
+  "note": "Gate threshold test of the saved v5 model (no retraining), scripts/gate_threshold_test.py. 'weak' = lowest quarter of cbmf_new among convective columns. Values as printed (rounded).",
+  "rows": [
+    {
+      "region": "Indian Ocean 2023",
+      "threshold": 0.5,
+      "F1": 0.989,
+      "missed": 510,
+      "weak_missed": 498,
+      "false_alarms": 53,
+      "flux_err": 0.112,
+      "offdiag_median": 0.339,
+      "cols_at_100pct": 0.02,
+      "cbmf_R2": 0.989
+    },
+    {
+      "region": "Indian Ocean 2023",
+      "threshold": 0.4,
+      "F1": 0.99,
+      "missed": 443,
+      "weak_missed": 432,
+      "false_alarms": 64,
+      "flux_err": 0.112,
+      "offdiag_median": 0.339,
+      "cols_at_100pct": 0.018,
+      "cbmf_R2": 0.989
+    },
+    {
+      "region": "Indian Ocean 2023",
+      "threshold": 0.3,
+      "F1": 0.991,
+      "missed": 379,
+      "weak_missed": 370,
+      "false_alarms": 87,
+      "flux_err": 0.111,
+      "offdiag_median": 0.339,
+      "cols_at_100pct": 0.015,
+      "cbmf_R2": 0.989
+    },
+    {
+      "region": "Indian Ocean 2023",
+      "threshold": 0.2,
+      "F1": 0.992,
+      "missed": 311,
+      "weak_missed": 303,
+      "false_alarms": 112,
+      "flux_err": 0.111,
+      "offdiag_median": 0.339,
+      "cols_at_100pct": 0.013,
+      "cbmf_R2": 0.989
+    },
+    {
+      "region": "Atlantic 2023",
+      "threshold": 0.5,
+      "F1": 0.976,
+      "missed": 643,
+      "weak_missed": 588,
+      "false_alarms": 503,
+      "flux_err": 0.079,
+      "offdiag_median": 0.38,
+      "cols_at_100pct": 0.027,
+      "cbmf_R2": 0.966
+    },
+    {
+      "region": "Atlantic 2023",
+      "threshold": 0.4,
+      "F1": 0.977,
+      "missed": 555,
+      "weak_missed": 509,
+      "false_alarms": 528,
+      "flux_err": 0.08,
+      "offdiag_median": 0.379,
+      "cols_at_100pct": 0.024,
+      "cbmf_R2": 0.967
+    },
+    {
+      "region": "Atlantic 2023",
+      "threshold": 0.3,
+      "F1": 0.978,
+      "missed": 489,
+      "weak_missed": 448,
+      "false_alarms": 565,
+      "flux_err": 0.081,
+      "offdiag_median": 0.379,
+      "cols_at_100pct": 0.021,
+      "cbmf_R2": 0.967
+    },
+    {
+      "region": "Atlantic 2023",
+      "threshold": 0.2,
+      "F1": 0.979,
+      "missed": 401,
+      "weak_missed": 370,
+      "false_alarms": 616,
+      "flux_err": 0.082,
+      "offdiag_median": 0.379,
+      "cols_at_100pct": 0.017,
+      "cbmf_R2": 0.968
+    }
+  ]
+}
