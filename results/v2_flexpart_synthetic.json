@@ -1,0 +1,19 @@
+{
+  "teacher": "flexpart",
+  "gate_F1": 0.9555253447271315,
+  "gate_TP_FP_FN": [
+    2460,
+    60,
+    169
+  ],
+  "matrix_MAE_convective": 5.7011602075157356e-05,
+  "matrix_MAE_full_pipeline": 2.516049853816717e-05,
+  "mass_flux_max_relative_error": 0.10867234430886996,
+  "particle_W1_hPa_median": 0.08229254954919003,
+  "particle_W1_hPa_p95": 0.2973447212850206,
+  "cbmf_R2": 0.9638120407065722,
+  "row_sums_equal_1": true,
+  "time_per_column_teacher_us": 47.89099249998685,
+  "time_per_column_model_us": 18.123062500023934,
+  "speedup": 2.642544134023905
+}

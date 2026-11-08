@@ -1,0 +1,16 @@
+{
+  "gate_F1": 0.9766621438263229,
+  "gate_TP_FP_FN": [
+    3599,
+    61,
+    111
+  ],
+  "matrix_MAE_convective": 0.0006034302929748631,
+  "matrix_MAE_full_pipeline": 0.0006440949680432251,
+  "mass_flux_max_relative_error": 0.034961144431128986,
+  "particle_W1_hPa_median": 0.7037248452095756,
+  "particle_W1_hPa_p95": 3.098014932241526,
+  "row_sums_equal_1": true,
+  "time_per_column_teacher_us": 81.93158800003175,
+  "time_per_column_model_us": 17.651203500008705
+}

@@ -1,0 +1,27 @@
+# Data and model files (large; regenerate with the notebooks / scripts)
+*.nc
+*.pt
+*.npz
+era5_phase1/
+era5_heldout/
+flexpart/
+build/
+build_dbg/
+flexpart_phase1*/
+
+# Python / Jupyter
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# LaTeX build files (the compiled PDF is kept)
+report/*.aux
+report/*.log
+report/*.out
+report/*.toc
+report/*.fls
+report/*.fdb_latexmk
+report/*.synctex.gz
+
+# Credentials — never commit
+.cdsapirc

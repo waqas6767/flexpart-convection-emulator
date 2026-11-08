@@ -1,0 +1,14 @@
+{
+  "note": "Held-out region test of the v5 emulator (trained on the tropical Indian Ocean 2019-2021). Values as printed by scripts/heldout_atlantic_eval.py, rounded to 4 decimals.",
+  "region": "tropical Atlantic 2023 (10S-10N, 40W-0), never seen in training",
+  "columns": 27552,
+  "convective_share": 0.858,
+  "gate_F1": 0.9758,
+  "cautious_top_at_or_above_true": 0.9853,
+  "mass_flux_max_relative_error": 0.0792,
+  "offdiag_relative_error_median": 0.3794,
+  "offdiag_relative_error_median_strongest_10pct": 0.3754,
+  "particle_W1_hPa_median": 0.0134,
+  "cbmf_R2": 0.9650,
+  "row_sums_equal_1": true
+}
