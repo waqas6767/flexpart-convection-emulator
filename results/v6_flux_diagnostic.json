@@ -1,0 +1,25 @@
+{
+  "note": "Diagnostic of the v6 Atlantic mass-flux error (scripts/flux_diagnostic.py), values as printed. Labels were regenerated with a different random cbmf spin-up, so the Atlantic worst-level error is 12.3% here vs 11.2% in v6_heldout_tropical_atlantic.json.",
+  "surface_pressure_percentiles_hPa": {
+    "percentiles": [1, 5, 50, 95, 99],
+    "indian_ocean_train_2019_2021": [1004.0, 1006.2, 1009.4, 1012.1, 1013.5],
+    "indian_ocean_test_2023": [1005.3, 1006.5, 1010.6, 1013.4, 1014.5],
+    "atlantic_2023": [1006.4, 1010.6, 1013.8, 1017.1, 1018.4]
+  },
+  "below_ground_columns_excluded": {"indian_ocean_per_year": [506, 510, 519, 495], "atlantic_2023": 2750},
+  "share_outside_training_1_99pct_range": {"indian_ocean_test_2023": 0.050, "atlantic_2023": 0.562},
+  "worst_level": {
+    "indian_ocean_2023": {"interface_hPa": 837.5, "error": 0.046, "flux_share_of_column_max": 0.79},
+    "atlantic_2023": {"interface_hPa": 137.5, "error": 0.123, "flux_share_of_column_max": 0.01}
+  },
+  "worst_error_where_flux_at_least_10pct_of_max": {"indian_ocean_2023": 0.046, "atlantic_2023": 0.095},
+  "typical_error_860_to_375_hPa": {"indian_ocean_2023": "3-4.6%", "atlantic_2023": "6-9.5%"},
+  "upward_flux_at_837.5_hPa": {"indian_ocean_2023": 0.2720, "atlantic_2023": 0.1559},
+  "atlantic_error_by_surface_pressure": {
+    "inside_training_range": {"error": 0.098, "columns": 9675},
+    "outside_training_range": {"error": 0.286, "columns": 12837}
+  },
+  "atlantic_error_with_surface_pressure_input_clipped_to_training_range": 0.119,
+  "atlantic_error_unclipped": 0.123,
+  "conclusion": "Not caused by the surface-pressure input (clipping barely helps). Higher surface pressure marks a different regime: more shallow convection (Atlantic flux halves by 860 hPa) than in the Indian Ocean training data, so the emulator lifts 6-9% too much air into the free troposphere. Remedy: more varied training regions."
+}

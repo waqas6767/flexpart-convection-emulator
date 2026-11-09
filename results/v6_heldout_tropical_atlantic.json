@@ -1,0 +1,18 @@
+{
+  "region": "tropical Atlantic 2023 (never seen in training)",
+  "columns": 24802,
+  "convective_share": 0.9076687363922264,
+  "gate_F1": 0.9812055874084077,
+  "gate_TP_FP_FN": [
+    22162,
+    499,
+    350
+  ],
+  "cautious_top_at_or_above_true": 0.9839641080312722,
+  "mass_flux_max_relative_error": 0.11219461476560337,
+  "offdiag_relative_error_median": 0.3277075037086282,
+  "offdiag_relative_error_median_strongest_10pct": 0.3027666594344698,
+  "particle_W1_hPa_median": 0.011299683687834875,
+  "cbmf_R2": 0.9779985816392439,
+  "row_sums_equal_1": true
+}

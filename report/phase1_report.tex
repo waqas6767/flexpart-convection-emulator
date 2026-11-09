@@ -13,7 +13,7 @@
 \usepackage[round,authoryear]{natbib}
 \usepackage[colorlinks=true,linkcolor=blue!50!black,urlcolor=blue!50!black,citecolor=blue!50!black]{hyperref}
 
-\graphicspath{{../figures/}}
+\graphicspath{{figures/}{../figures/}}
 \captionsetup{font=small,labelfont=bf}
 \newcolumntype{Y}{>{\raggedright\arraybackslash}X}
 
@@ -32,13 +32,16 @@ exact physics and only complex modules are replaced by small trained models. FLE
 routines (\texttt{CONVECT}, \texttt{TLIFT}) were extracted, patched and compiled as a standalone library
 that labels atmospheric columns with the scheme's redistribution matrix and new cloud-base mass flux.
 Four small neural networks (a convection gate, a cloud-top classifier, a mass-conserving redistribution
-network and a cloud-base mass-flux regressor; $\approx$1.9~MB in total) were trained on 82\,656 ERA5
-columns of the tropical Indian Ocean (2019--2021). On the unseen year 2023 they reproduce the mean
-upward mass-flux profile within 10.9\% at the worst level, conserve mass exactly, and reach a median
-per-column error of 34\% in the moved air. On the tropical Atlantic, a region never seen in training,
-all errors stay within 1.13 times the Indian Ocean values. The emulator is only 1.3--1.6 times faster
-than the Fortran scheme on a CPU, so the case for the approach rests on accuracy and on learning
-better physics in later phases, not on speed.
+network and a cloud-base mass-flux regressor; $\approx$1.9~MB in total) were trained on ERA5 columns of
+the tropical Indian Ocean (2019--2021). In the final version (v6), which uses real surface pressure, they
+reproduce the mean upward mass-flux profile of the unseen year 2023 within 4.7\% at every significant
+level, conserve mass exactly, and reach a median per-column error of 29\% in the moved air. On the
+tropical Atlantic, a region never seen in training, the per-column structure generalises (errors within
+1.12 times the Indian Ocean values), but the mass-flux profile is overestimated by 6--9\% above the
+boundary layer. A diagnostic traces this to a shift in convection regime (shallower convection under
+higher surface pressure), not to the surface-pressure input, which points to more varied training
+regions. The emulator is only 1.3--2.4 times faster than the Fortran scheme on a CPU, so the case for
+the approach rests on accuracy and on learning better physics in later phases, not on speed.
 \end{abstract}
 
 \section{Motivation}
@@ -61,7 +64,7 @@ but they bypass the physics instead of replacing single modules.
 \toprule
 Phase & Work & Status \\
 \midrule
-1 & Offline emulator of FLEXPART's convection scheme, trained on FLEXPART's own code & essentially complete \\
+1 & Offline emulator of FLEXPART's convection scheme, trained on FLEXPART's own code & complete (v6) \\
 2 & Coupling into FLEXPART (TorchScript model called from Fortran via FTorch); long online runs & next \\
 3 & ML turbulence and wet-scavenging modules trained on LES or observations, aiming to beat the original fits & planned \\
 4 & Validation of the hybrid model against ship and aircraft observations & planned \\
@@ -103,8 +106,11 @@ summed to one.
 (1000--10~hPa), January, April, July and October, four days per month, 00 and 12~UTC, on a 1$^\circ$
 grid; 27\,552 columns per year. Tropical Indian Ocean (10$^\circ$S--10$^\circ$N, 60--100$^\circ$E):
 training 2019--2021, validation 2022, test 2023. Tropical Atlantic (10$^\circ$S--10$^\circ$N,
-40$^\circ$W--0$^\circ$), 2023: held-out region. Surface pressure was not downloaded; 1013~hPa is
-assumed. Earlier versions (v1--v3) used synthetic soundings from four climate regimes.
+40$^\circ$W--0$^\circ$), 2023: held-out region. Versions v4 and v5 assumed a surface pressure of
+1013~hPa; v6 uses ERA5 surface pressure (single levels, same dates and grid) and excludes columns whose
+surface pressure is at or below 1000~hPa, where the lowest level lies below the ground (1.9\% of Indian
+Ocean columns, 10\% of Atlantic columns, mostly land). Earlier versions (v1--v3) used synthetic soundings
+from four climate regimes.
 
 \textbf{Labels.} Because of the scheme's memory, each column gets a random number (0--8) of spin-up
 calls, which gives a realistic spread of the previous cloud-base mass flux $m_b^{\text{old}}$; the next
@@ -115,7 +121,8 @@ lifting condensation level pressure from a parcel ascent, and $m_b^{\text{old}}$
 
 \subsection{Models}
 \begin{enumerate}
-\item \textbf{Gate} (MLP, $2\times128$): probability that convection is active.
+\item \textbf{Gate} (MLP, $2\times128$): probability that convection is active; a column counts as
+convective above a threshold of 0.5 (v4, v5) or 0.3 (v6, Section~\ref{sec:v6}).
 \item \textbf{Cloud top} (MLP, $2\times128$, 32 classes): highest level touched by the convection. At
 prediction time the \emph{cautious} cloud top is used: the smallest level $k$ with
 $P(\text{top}\le k)\ge 0.95$.
@@ -155,7 +162,7 @@ distance between final-pressure distributions of mass-weighted particles); $R^2$
 $m_b^{\text{new}}$; and speed per column on a CPU.
 
 \section{Development history}
-Table~\ref{tab:history} summarises the five versions. Two lessons shaped the final design. First,
+Table~\ref{tab:history} summarises the versions. Two lessons shaped the final design. First,
 averaged metrics hide structural errors: v2's matrix error was tiny ($5.7\times10^{-5}$) because most
 entries are trivially near 0 or 1, yet single columns were visibly blurred
 (Fig.~\ref{fig:v2v3}a): when unsure whether the cloud stops at one level or another, the network spread
@@ -164,6 +171,7 @@ boundary-layer flux bias. Second, a mass-flux loss switched on from the start co
 the untrained network's fluxes were thousands of times too large, and the quickest way to reduce a
 \emph{relative} flux error was to move no air at all (Fig.~\ref{fig:v2v3}b). Used only as a
 fine-tuning stage (v5), the same term removed the 15--20\% flux overestimate seen on ERA5 in v4.
+v6 added real surface pressure and a lower gate threshold (Section~\ref{sec:v6}).
 
 \begin{table}[h]
 \centering\small
@@ -175,12 +183,15 @@ v2 & synthetic & 0.956 & -- & 10.9\% & -- & 0.964 & 2.6$\times$ \\
 v3, flux loss 0.1 & synthetic & 0.961 & 0.845 & 865\% & 122\% & 0.964 & 1.5$\times$ \\
 v3, no flux loss & synthetic & 0.961 & 0.845 & 4.7\% & 57\% & 0.964 & 1.6$\times$ \\
 v4 & ERA5 & 0.989 & 0.791 & 28.2\% & 34\% & 0.990 & 1.3$\times$ \\
-\textbf{v5} & \textbf{ERA5} & \textbf{0.989} & \textbf{0.827} & \textbf{10.9\%} & \textbf{34\%} & \textbf{0.990} & \textbf{1.4$\times$} \\
+v5 & ERA5 & 0.989 & 0.827 & 10.9\% & 34\% & 0.990 & 1.4$\times$ \\
+\textbf{v6} & \textbf{ERA5} & \textbf{0.994} & \textbf{0.817} & \textbf{4.7\%} & \textbf{29\%} & \textbf{0.991} & \textbf{2.4$\times^{*}$} \\
 \bottomrule
 \end{tabular}
 \caption{Development history. Flux error: worst-level relative error of the mean upward mass flux.
 Off-diagonal error: median per-column relative error of the moved air. Synthetic and ERA5 results are
-not directly comparable. v1 used a simplified stand-in scheme and is omitted.}
+not directly comparable; the v6 test set excludes below-ground columns. $^{*}$FLEXPART's own timing
+varied between Colab runs (54 vs 103~$\mu$s per column), so speed-ups are not comparable between
+versions. v1 used a simplified stand-in scheme and is omitted.}
 \label{tab:history}
 \end{table}
 
@@ -262,26 +273,110 @@ off-diagonal error and $m_b^{\text{new}}$.}
 
 \subsection{Speed}
 FLEXPART's scheme takes about 50--90~$\mu$s per column in these tests (including Python call
-overhead); the four-model emulator takes about 38~$\mu$s per column in batches on a CPU, a speed-up of
-only 1.3--1.6. Called one column at a time inside FLEXPART, the advantage would shrink further.
+overhead, and up to about 100~$\mu$s on a busier machine); the four-model emulator takes about
+38--42~$\mu$s per column in batches on a CPU, a speed-up of only 1.3--2.4. Called one column at a time
+inside FLEXPART, the advantage would shrink further.
+
+\section{Surface pressure, gate threshold and the generalisation gap (v6)}
+\label{sec:v6}
+
+\textbf{Gate threshold.} Re-evaluating the saved v5 model with gate thresholds from 0.5 to 0.2 (no
+retraining) showed that 91--98\% of the missed convective columns are weak convection (the lowest
+quarter of $m_b^{\text{new}}$). A threshold of 0.2 recovers about 40\% of the misses at roughly one
+extra false alarm each, while the transport checks change by less than 0.3 percentage points. v6
+therefore uses 0.3.
+
+\textbf{Surface pressure.} v6 uses ERA5 surface pressure as an input feature (it was constant before)
+and as the bottom half-level pressure passed to \texttt{CONVECT}, as FLEXPART's \texttt{calcmatrix}
+does, and it excludes below-ground columns. Table~\ref{tab:v6} compares v5 and v6. On the Indian Ocean
+test year, v6 halves the worst-level mass-flux error (10.9\% to 4.7\%) and lowers the per-column error
+(34\% to 29\%); the gate misses drop from 501 to 154. In the Atlantic, the per-column structure,
+particle test and $m_b^{\text{new}}$ all improve, but the worst-level mass-flux error rises from 7.9\%
+to 11.2\%. Part of the improvement may come from excluding land columns, whose lowest levels were
+extrapolated; this run cannot separate the two effects.
+
+\begin{table}[h]
+\centering\small
+\begin{tabular}{lcccc}
+\toprule
+Check & v5 Indian & v6 Indian & v5 Atlantic & v6 Atlantic \\
+\midrule
+Gate F1 & 0.989 & 0.994 & 0.976 & 0.981 \\
+Missed / false alarms & 501 / 53 & 154 / 148 & 643 / 503 & 350 / 499 \\
+Mass flux, worst significant level & 10.9\% & 4.7\% & 7.9\% & 11.2\% \\
+Off-diagonal error, median & 33.9\% & 29.3\% & 37.9\% & 32.8\% \\
+Off-diagonal error, strongest 10\% & 33.2\% & 29.3\% & 37.5\% & 30.3\% \\
+Particle test, median & 0.014 hPa & 0.013 hPa & 0.013 hPa & 0.011 hPa \\
+$R^2(m_b^{\text{new}})$ & 0.990 & 0.991 & 0.965 & 0.978 \\
+\bottomrule
+\end{tabular}
+\caption{v5 against v6 on the two test sets (2023). The v6 test sets exclude below-ground columns.}
+\label{tab:v6}
+\end{table}
+
+\textbf{Diagnosing the Atlantic gap.} Three findings explain the rise (Table~\ref{tab:diag}). First,
+the Atlantic's worst level (137.5~hPa) carries only 1\% of the peak flux; where the flux is at least
+10\% of its peak, the worst error is 9.5\% (Indian Ocean: 4.6\%). Even so, there is a systematic bias:
+between 860 and 375~hPa the emulator lifts 6--9\% too much air in the Atlantic, against 3--4.6\% in
+the Indian Ocean. Second, the Atlantic's surface pressure lies outside the training range for 56\% of
+its columns (median 1013.8 against 1009.4~hPa), and those columns have a much larger error (28.6\%
+against 9.8\%). Third, clipping the surface-pressure \emph{input} to the training range barely changes
+the error (12.3\% to 11.9\%), so the input itself is not the cause. Higher surface pressure marks a
+different regime: Atlantic convection is shallower (its upward flux falls to 0.16~hPa at 837.5~hPa,
+against 0.27~hPa in the Indian Ocean), which the Indian Ocean training data rarely contains, so the
+emulator treats it as slightly deeper than it is. The remedy is more varied training data rather than
+a different model.
+
+\begin{table}[h]
+\centering\small
+\begin{tabular}{lcc}
+\toprule
+ & Indian Ocean 2023 & Atlantic 2023 \\
+\midrule
+Surface pressure, 5 / 50 / 95\% (hPa) & 1006.5 / 1010.6 / 1013.4 & 1010.6 / 1013.8 / 1017.1 \\
+Outside training range (1004.0--1013.5 hPa) & 5.0\% & 56.2\% \\
+Worst-level flux error (level; share of peak) & 4.6\% (837.5; 79\%) & 12.3\% (137.5; 1\%) \\
+Worst error where flux $\ge$ 10\% of peak & 4.6\% & 9.5\% \\
+Error inside / outside training range & -- & 9.8\% / 28.6\% \\
+Error, surface-pressure input clipped & -- & 11.9\% (unclipped 12.3\%) \\
+\bottomrule
+\end{tabular}
+\caption{Diagnostic of the v6 mass-flux error. Training surface pressure (2019--2021): 5 / 50 / 95\% =
+1006.2 / 1009.4 / 1012.1~hPa. Labels were regenerated with a new random spin-up, hence 12.3\% instead of
+11.2\%.}
+\label{tab:diag}
+\end{table}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=\textwidth]{v6_era5_strongest_column.png}
+\caption{v6, strongest test column of the Indian Ocean 2023 (a deep column; cloud top true 22, most
+likely 22, cautious 23). The emulator reproduces the surface updraft to levels 6--22 and the mixing
+above the diagonal; surface air detrains slightly too low.}
+\label{fig:v6}
+\end{figure}
 
 \section{Discussion}
 \textbf{What worked.} Extracting the real scheme made true labels cheap (about 0.2~ms per call). A
 masked, row-wise softmax conserves mass exactly by construction. The cloud-top model, used cautiously,
 removed the blurring and made cloud-top mistakes cheap. Weighting rows by moved air and a late
-flux fine-tuning stage brought the mass-flux profile into agreement.
+flux fine-tuning stage brought the mass-flux profile into agreement. Real surface pressure (v6)
+halved the remaining Indian Ocean flux error.
 
 \textbf{What did not.} A flux loss from the start collapsed training. Speed was the weakest
-argument: the Emanuel scheme is cheaper than expected.
+argument: the Emanuel scheme is cheaper than expected. Training on one region left a regime gap: the
+mass-flux profile transfers less well to a region with shallower convection.
 
-\textbf{Limitations.} Offline only; surface pressure fixed at 1013~hPa; ERA5 pressure levels instead
-of FLEXPART's model levels; a 1$^\circ$ grid and two regions; and FLEXPART's \texttt{nconvtop} lies one
+\textbf{Limitations.} Offline only; below-ground (mostly land) columns excluded; ERA5 pressure levels
+instead of FLEXPART's model levels; a 1$^\circ$ grid, one training region and one held-out region; and FLEXPART's \texttt{nconvtop} lies one
 level above the highest level with mass flux, which may place cloud tops slightly high.
 
-\textbf{Next steps.} (1) Lower the gate threshold to recover weak convection; (2) add surface
-pressure and model-level input; (3) Phase~2: call the TorchScript model from FLEXPART's Fortran code
-via FTorch and run long simulations; (4) Phase~3: train turbulence or scavenging modules on LES or
-observations, where an ML module could be more accurate than the original empirical fits.
+\textbf{Next steps.} (1) Train on several regions with different convection regimes (e.g.\ adding the
+Atlantic and testing on the western Pacific) and give weak convection more weight in the gate;
+(2) retrain on FLEXPART's terrain-following model levels, so land columns can be kept; (3) Phase~2: call
+the TorchScript model from FLEXPART's Fortran code via FTorch and run long simulations; (4) Phase~3:
+train turbulence or scavenging modules on LES or observations, where an ML module could be more
+accurate than the original empirical fits.
 
 \section*{Code and data}
 Notebooks, scripts, results and figures: this repository. FLEXPART is downloaded from its official

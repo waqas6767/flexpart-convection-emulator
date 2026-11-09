@@ -1,0 +1,29 @@
+{
+  "teacher": "flexpart",
+  "data_source": "era5",
+  "gate_threshold": 0.3,
+  "surface_pressure": "ERA5",
+  "gate_F1": 0.9939991257004331,
+  "gate_TP_FP_FN": [
+    25012,
+    148,
+    154
+  ],
+  "cloud_top_exact_accuracy": 0.8172931733290948,
+  "cloud_top_within_1_level": 0.9375745052849082,
+  "cautious_top_at_or_above_true": 0.9848605261066519,
+  "cautious_top_mean_extra_levels": 0.6889056663752682,
+  "matrix_MAE_convective": 1.688287209167293e-05,
+  "mass_flux_max_relative_error": 0.04687112294008516,
+  "mass_flux_max_relative_error_true_top": 0.04479333300831185,
+  "offdiag_relative_error_median": 0.29315458088066226,
+  "offdiag_relative_error_median_strongest_10pct": 0.29274170077595474,
+  "offdiag_relative_error_median_true_top": 0.2738758173527716,
+  "particle_W1_hPa_median": 0.013384953535362726,
+  "particle_W1_hPa_p95": 0.06072517651106851,
+  "cbmf_R2": 0.9909578589665431,
+  "row_sums_equal_1": true,
+  "time_per_column_teacher_us": 102.75814600004196,
+  "time_per_column_model_us": 42.040212500069174,
+  "speedup": 2.444282269026896
+}
